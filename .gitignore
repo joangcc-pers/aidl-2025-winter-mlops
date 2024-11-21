@@ -152,6 +152,11 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+
+#Session 3 exclude
+session-3/dataset/
+session-3/car_test_image.jpg
+session-3/flower_test_image.jpg
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
