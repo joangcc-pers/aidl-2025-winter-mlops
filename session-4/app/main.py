@@ -12,29 +12,34 @@ VOCAB = None
 MODEL = None
 NGRAMS = None
 TOKENIZER = None
+MAP_TOKEN2IDX = None
+MODEL_LOADED = False
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
 
 # The code in this function will be executed before we recieve any request
-@app.before_first_request
-def _load_model():
+def load_model():
     # First load into memory the variables that we will need to predict
-    checkpoint_path = pathlib.Path(__file__).parent.absolute() / "state_dict.pt"
-    checkpoint = torch.load(checkpoint_path)
+    global VOCAB, MODEL, NGRAMS, TOKENIZER, MAP_TOKEN2IDX, MODEL_LOADED
+    if not MODEL_LOADED:
+        checkpoint_path = pathlib.Path(__file__).parent.absolute() / "state_dict.pt"
+        checkpoint = torch.load(checkpoint_path)
 
-    global VOCAB, MODEL, NGRAMS, TOKENIZER, MAP_TOKEN2IDX
-    VOCAB = checkpoint["vocab"]
-    # TODO load the model. You can get `embed_dim` and `num_class` from the checkpoint. 
-    # TODO Then, load the state dict of the model
-    MODEL = ...
-    MODEL...
+        VOCAB = checkpoint["vocab"]
+        embed_dim = checkpoint["embed_dim"]
+        num_class = checkpoint["num_class"]
+        NGRAMS = checkpoint["ngrams"]
+        TOKENIZER = get_tokenizer("basic_english")
+        MAP_TOKEN2IDX = VOCAB.get_stoi()
 
-    NGRAMS = checkpoint["ngrams"]
-    TOKENIZER = get_tokenizer("basic_english")
-    MAP_TOKEN2IDX = VOCAB.get_stoi()
+        # Inicializa el modelo y carga el estado
+        MODEL = SentimentAnalysis(len(VOCAB), embed_dim, num_class)
+        MODEL.load_state_dict(checkpoint["model_state_dict"])
+        MODEL.eval()
 
+        MODEL_LOADED = True  # Marca el modelo como cargado
 
 # Disable gradients
 @torch.no_grad()
@@ -46,7 +51,8 @@ def predict_review_sentiment(text):
 
     # Compute output
     # TODO compute the output of the model. Note that you will have to give it a 0 as an offset.
-    output = ...
+    offsets = torch.tensor([0])
+    output = MODEL(text, offsets)
     confidences = torch.softmax(output, dim=1)
     return confidences.squeeze()[
         1
@@ -55,6 +61,7 @@ def predict_review_sentiment(text):
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    load_model()
     """The input parameter is `review`"""
     review = request.form["review"]
     print(f"Prediction for review:\n {review}")
@@ -66,6 +73,7 @@ def predict():
 @app.route("/", methods=["GET"])
 def hello():
     """ Return an HTML. """
+    load_model()
     return render_template("hello.html")
 
 

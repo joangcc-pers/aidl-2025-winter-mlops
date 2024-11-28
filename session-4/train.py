@@ -17,7 +17,13 @@ def train(dataloader):
     train_acc = 0
     for text, offsets, label in dataloader:
         # TODO complete the training code. The inputs of the model are text and offsets
-        ...
+        output = model(text, offsets)
+        loss = criterion(output, label)
+
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
         train_loss += loss.item() * len(output)
         train_acc += (output.argmax(1) == label).sum().item()
@@ -35,7 +41,8 @@ def test(dataloader: DataLoader):
     acc = 0
     for text, offsets, label in dataloader:
         # TODO complete the evaluation code. The inputs of the model are text and offsets
-        ...
+        output = model(text, offsets)
+        loss = criterion(output, label)
 
         loss += loss.item() * len(output)
         acc += (output.argmax(1) == label).sum().item()
@@ -64,7 +71,7 @@ if __name__ == "__main__":
 
     # Load the model
     # TODO load the model
-    model = ...
+    model = SentimentAnalysis(VOCAB_SIZE, EMBED_DIM, NUM_CLASS).to(device)
         
     # We will use CrossEntropyLoss even though we are doing binary classification 
     # because the code is ready to also work for many classes
@@ -76,8 +83,9 @@ if __name__ == "__main__":
 
     # Split train and val datasets
     # TODO split `train_val_dataset` in `train_dataset` and `valid_dataset`. The size of train dataset should be 95%
-
-    train_dataset, valid_dataset = ...
+    train_size = int(0.95 * len(train_val_dataset))
+    valid_size = len(train_val_dataset) - train_size
+    train_dataset, valid_dataset = random_split(train_val_dataset, [train_size, valid_size])
     
     # DataLoader needs an special function to generate the batches. 
     # Since we will have inputs of varying size, we will concatenate 
