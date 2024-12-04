@@ -159,3 +159,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 session-3/dataset/cars_vs_flowers/
+session-4/yelp_review_polarity_csv
+session-4/app/state_dict.pt
