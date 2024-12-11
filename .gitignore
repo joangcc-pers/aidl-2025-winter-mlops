@@ -161,3 +161,6 @@ cython_debug/
 session-3/dataset/cars_vs_flowers/
 session-4/yelp_review_polarity_csv
 session-4/app/state_dict.pt
+session-5/data
+session-5/logs
+session-5/wandb/run*
